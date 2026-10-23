@@ -22,7 +22,7 @@ g2p-espeak = ["dep:espeak-rs"]
 # Apple CoreML execution provider (macOS only). Select at runtime with KOKORO_DEVICE=coreml.
 coreml = ["ort/coreml"]
 # ONNX Runtime WebGPU execution provider (Dawn; Metal on macOS). KOKORO_DEVICE=webgpu.
-webgpu = ["ort/webgpu"]
+webgpu = ["ort/webgpu", "ort/copy-dylibs"]
 # Native candle backend, no ONNX: KOKORO_DEVICE=metal (Apple GPU) or candle-cpu.
 # Model code: omp-voice-kokoro (MIT). Weights: bench/convert_safetensors.py.
 candle = ["dep:omp-voice-kokoro", "dep:candle-core", "dep:candle-nn"]

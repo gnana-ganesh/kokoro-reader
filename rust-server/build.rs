@@ -6,6 +6,11 @@ fn main() {
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("macos") {
         return;
     }
+    // `webgpu`: ORT's macOS WebGPU build links libwebgpu_dawn.dylib via @rpath. ort's
+    // `copy-dylibs` symlinks it next to the binary; point the rpath there.
+    if std::env::var_os("CARGO_FEATURE_WEBGPU").is_some() {
+        println!("cargo:rustc-link-arg=-Wl,-rpath,@executable_path");
+    }
     let Ok(out) = std::process::Command::new("clang").arg("--print-resource-dir").output() else {
         return;
     };
