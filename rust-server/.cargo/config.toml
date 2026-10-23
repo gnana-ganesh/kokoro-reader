@@ -1,0 +1,4 @@
+[env]
+# ONNX Runtime's prebuilt macOS objects (via ort) are built for macOS 13.4; match it so the
+# linker doesn't target 11.0 (rustc's default for aarch64-apple-darwin).
+MACOSX_DEPLOYMENT_TARGET = "13.4"
