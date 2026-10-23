@@ -15,3 +15,7 @@ This crate is MIT-licensed (same as kokoro-reader). It builds on:
   only compiled with `--features g2p-misaki-rs` / `g2p-espeak`. A binary built with `g2p-espeak`
   links GPL code; the default build does not.
 - **pykeio/ort** — ONNX Runtime bindings (MIT/Apache-2.0).
+- **omp-voice-kokoro** 0.1.0 (Kyle Kelley, Can Boluk; https://github.com/can1357/omp) — candle/Metal
+  Kokoro port (MIT), vendored in `vendor/omp-voice-kokoro` with local changes listed in its
+  `VENDORED.md`. Only compiled with `--features candle`.
+- **huggingface/candle** — tensor library with the Metal backend (MIT/Apache-2.0).

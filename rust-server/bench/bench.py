@@ -15,7 +15,7 @@ def rss():
         if out: d["VmRSS"] = int(out) // 1024
     return d
 u = urlparse(url)
-lat, dur = [], None
+lat, dur, first = [], None, None
 for i in range(runs + 1):
     c = http.client.HTTPConnection(u.hostname, u.port, timeout=300)
     t = time.time()
@@ -24,8 +24,9 @@ for i in range(runs + 1):
     assert r.status == 200, (r.status, b[:200])
     dur = float(r.getheader("X-Audio-Duration"))
     if i > 0: lat.append(el)   # first run = warm-up
+    else: first = el
     open(f"out_{label}.wav", "wb").write(b)
 m = rss()
 print(json.dumps({"label": label, "words": len(text.split()), "audio_s": dur, "median_s": round(statistics.median(lat), 2),
-                  "min_s": round(min(lat), 2), "max_s": round(max(lat), 2), "rtf_x": round(dur / statistics.median(lat), 1),
+                  "min_s": round(min(lat), 2), "max_s": round(max(lat), 2), "rtf_x": round(dur / statistics.median(lat), 1), "first_s": round(first, 2),
                   "rss_mb": m.get("VmRSS"), "peak_rss_mb": m.get("VmHWM")}))

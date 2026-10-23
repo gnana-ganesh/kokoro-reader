@@ -21,6 +21,11 @@ g2p-misaki-rs = ["dep:misaki-rs"]
 g2p-espeak = ["dep:espeak-rs"]
 # Apple CoreML execution provider (macOS only). Select at runtime with KOKORO_DEVICE=coreml.
 coreml = ["ort/coreml"]
+# ONNX Runtime WebGPU execution provider (Dawn; Metal on macOS). KOKORO_DEVICE=webgpu.
+webgpu = ["ort/webgpu"]
+# Native candle backend, no ONNX: KOKORO_DEVICE=metal (Apple GPU) or candle-cpu.
+# Model code: omp-voice-kokoro (MIT). Weights: bench/convert_safetensors.py.
+candle = ["dep:omp-voice-kokoro", "dep:candle-core", "dep:candle-nn"]
 
 [dependencies]
 ort = { version = "=2.0.0-rc.15" }
@@ -33,6 +38,9 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 loqui-g2p = { version = "0.4", optional = true }
 misaki-rs = { version = "0.6", optional = true }
 espeak-rs = { version = "0.1.9", optional = true }
+omp-voice-kokoro = { path = "vendor/omp-voice-kokoro", optional = true }
+candle-core = { version = "0.11", optional = true }
+candle-nn = { version = "0.11", optional = true }
 
 [profile.release]
 lto = "thin"

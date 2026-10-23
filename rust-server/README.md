@@ -98,6 +98,24 @@ Release binary: 42.5 MB (macOS arm64, with CoreML), 48 MB (Linux, default featur
 the Python server. On the M2 it beats Python-on-CPU (int8 ≈ 1.5–2× faster) but **not** Python on
 MPS, because ONNX Runtime's CoreML EP can't run Kokoro's dynamic-shape graph as an MLProgram.
 
+## GPU backends (experimental)
+
+| `KOKORO_DEVICE` | build feature | what runs | weights |
+|---|---|---|---|
+| `metal` | `candle` | native candle port of Kokoro on the Apple GPU (no ONNX); BiLSTMs on the CPU | `kokoro-v1_0.safetensors` + `config.json` (`bench/convert_safetensors.py`) |
+| `candle-cpu` | `candle` | same, candle CPU backend (slow; for correctness checks) | same |
+| `webgpu` | `webgpu` | ONNX Runtime WebGPU EP (Dawn, Metal on macOS) | ONNX |
+| `coreml` | `coreml` | ONNX Runtime CoreML EP; `KOKORO_COREML_STATIC=1` offloads only static-shape nodes | ONNX |
+
+```sh
+cargo build --release --features coreml,webgpu,candle
+~/kokoro-reader/.venv/bin/python bench/convert_safetensors.py ~/.cache/kokoro-reader   # once, for metal
+KOKORO_DEVICE=metal ./target/release/kokoro-reader-server
+```
+
+`KOKORO_CANDLE_DETERMINISTIC=1` zeroes the decoder's random phase/noise (reproducible output).
+`KOKORO_LSTM=candle` uses the original per-timestep candle LSTM. Mac numbers: `bench/results/mac-m2-gpu/`.
+
 ## Pronunciation (10 tricky lines, `bench/tricky.txt`, vs Python misaki 0.9.4)
 
 | G2P | identical lines | mean similarity | ASR WER vs Python audio* |

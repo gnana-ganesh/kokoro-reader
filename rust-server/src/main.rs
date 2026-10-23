@@ -6,6 +6,8 @@
 //!
 //! Listens on 127.0.0.1 only. Browser requests are accepted only from chrome-extension:// origins.
 
+#[cfg(feature = "candle")]
+mod candle_backend;
 mod engine;
 mod g2p;
 mod normalize;
@@ -67,10 +69,13 @@ fn options() -> EngineOptions {
         _ => "kokoro-v1.0.onnx",
     };
     let default_g2p = g2p::available().first().copied().unwrap_or("none");
+    let device = env_or("KOKORO_DEVICE", "cpu").to_lowercase();
+    // candle backends (metal / candle-cpu) read hexgrad's weights as safetensors, not ONNX.
+    let file = if device == "metal" || device == "candle-cpu" { "kokoro-v1_0.safetensors" } else { file };
     EngineOptions {
         model_path: env_or("KOKORO_MODEL", &format!("{dir}/{file}")),
         voices_path: env_or("KOKORO_VOICES_FILE", &format!("{dir}/voices-v1.0.bin")),
-        device: env_or("KOKORO_DEVICE", "cpu").to_lowercase(),
+        device,
         threads: env_or("KOKORO_THREADS", "0").parse().unwrap_or(0),
         g2p: env_or("KOKORO_G2P", default_g2p),
         pack_phonemes: env_or("KOKORO_CHUNK_PHONEMES", "510").parse().unwrap_or(510),

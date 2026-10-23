@@ -36,7 +36,9 @@ impl Voice {
 }
 
 pub struct Engine {
-    session: Mutex<Session>,
+    session: Option<Mutex<Session>>,
+    #[cfg(feature = "candle")]
+    candle: Option<crate::candle_backend::CandleModel>,
     tokens_name: String,
     style_name: String,
     speed_name: String,
@@ -87,6 +89,17 @@ fn build_session(opts: &EngineOptions) -> Result<(Session, String), String> {
     }
     #[allow(unused_mut)]
     let mut device = "cpu".to_string();
+    if opts.device == "webgpu" {
+        #[cfg(feature = "webgpu")]
+        {
+            b = b
+                .with_execution_providers([ort::ep::WebGPU::default().build().error_on_failure()])
+                .map_err(|e| format!("WebGPU execution provider failed: {e}"))?;
+            device = "webgpu".into();
+        }
+        #[cfg(not(feature = "webgpu"))]
+        return Err("built without the `webgpu` feature; rebuild with --features webgpu".into());
+    }
     if opts.device == "coreml" {
         #[cfg(feature = "coreml")]
         {
@@ -105,8 +118,22 @@ fn build_session(opts: &EngineOptions) -> Result<(Session, String), String> {
                 .with_model_format(format)
                 .with_compute_units(units)
                 .with_subgraphs(true);
+            // KOKORO_COREML_STATIC=1: only hand CoreML the nodes whose input shapes are static
+            // (the rest stays on ORT's CPU EP). KOKORO_COREML_FAST=1: FastPrediction
+            // specialization. KOKORO_COREML_LOWPREC=1: fp16 accumulation on the GPU.
+            let flag = |k: &str| std::env::var(k).map(|v| v == "1").unwrap_or(false);
+            if flag("KOKORO_COREML_STATIC") {
+                ep = ep.with_static_input_shapes(true);
+            }
+            if flag("KOKORO_COREML_FAST") {
+                ep = ep.with_specialization_strategy(ort::ep::coreml::SpecializationStrategy::FastPrediction);
+            }
+            if flag("KOKORO_COREML_LOWPREC") {
+                ep = ep.with_low_precision_accumulation_on_gpu(true);
+            }
             if let Some(base) = &opts.coreml_cache {
-                let dir = format!("{base}/{units:?}-{format:?}");
+                let tag = if flag("KOKORO_COREML_STATIC") { "-static" } else { "" };
+                let dir = format!("{base}/{units:?}-{format:?}{tag}");
                 let _ = std::fs::create_dir_all(&dir);
                 ep = ep.with_model_cache_dir(dir);
             }
@@ -161,6 +188,27 @@ pub fn load_voices(path: &str) -> Result<HashMap<String, Voice>, String> {
 
 impl Engine {
     pub fn load(opts: &EngineOptions) -> Result<Engine, String> {
+        if opts.device == "metal" || opts.device == "candle-cpu" {
+            #[cfg(feature = "candle")]
+            {
+                let (m, device) = crate::candle_backend::CandleModel::load(&opts.model_path, &opts.device)?;
+                return Ok(Engine {
+                    session: None,
+                    candle: Some(m),
+                    tokens_name: String::new(),
+                    style_name: String::new(),
+                    speed_name: String::new(),
+                    speed_is_int: false,
+                    voices: load_voices(&opts.voices_path)?,
+                    g2p: crate::g2p::build(&opts.g2p)?,
+                    vocab: VOCAB.iter().copied().collect(),
+                    device,
+                    pack_phonemes: opts.pack_phonemes.clamp(16, MAX_PHONEMES),
+                });
+            }
+            #[cfg(not(feature = "candle"))]
+            return Err("built without the `candle` feature; rebuild with --features candle".into());
+        }
         let (session, device) = build_session(opts)?;
         let names: Vec<String> = session.inputs().iter().map(|i| i.name().to_string()).collect();
         let pick = |cands: &[&str]| -> Result<String, String> {
@@ -182,7 +230,9 @@ impl Engine {
         let voices = load_voices(&opts.voices_path)?;
         let g2p = crate::g2p::build(&opts.g2p)?;
         Ok(Engine {
-            session: Mutex::new(session),
+            session: Some(Mutex::new(session)),
+            #[cfg(feature = "candle")]
+            candle: None,
             tokens_name,
             style_name,
             speed_name,
@@ -239,6 +289,10 @@ impl Engine {
     }
 
     fn infer(&self, tokens: &[i64], style: &[f32], speed: f32) -> Result<Vec<f32>, String> {
+        #[cfg(feature = "candle")]
+        if let Some(m) = &self.candle {
+            return m.infer(tokens, style, speed);
+        }
         let mut ids = Vec::with_capacity(tokens.len() + 2);
         ids.push(0i64);
         ids.extend_from_slice(tokens);
@@ -246,7 +300,7 @@ impl Engine {
         let n = ids.len();
         let t_tokens = Tensor::from_array(([1usize, n], ids)).map_err(|e| e.to_string())?;
         let t_style = Tensor::from_array(([1usize, STYLE_DIM], style.to_vec())).map_err(|e| e.to_string())?;
-        let mut sess = self.session.lock().map_err(|e| e.to_string())?;
+        let mut sess = self.session.as_ref().ok_or("no ONNX session")?.lock().map_err(|e| e.to_string())?;
         let outputs = if self.speed_is_int {
             let t_speed = Tensor::from_array(([1usize], vec![speed.round() as i32])).map_err(|e| e.to_string())?;
             sess.run(ort::inputs![
