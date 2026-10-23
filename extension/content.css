@@ -1,0 +1,12 @@
+/* Kokoro Reader: page-side styles (panel itself lives in a shadow root) */
+.kokoro-current {
+  background: rgba(255, 214, 0, 0.28) !important;
+  box-shadow: 0 0 0 3px rgba(255, 214, 0, 0.28) !important;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+.kokoro-alt-hover {
+  outline: 2px dashed rgba(212, 68, 28, 0.75) !important;
+  outline-offset: 2px;
+  cursor: pointer !important;
+}

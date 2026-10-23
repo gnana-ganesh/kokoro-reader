@@ -1,0 +1,12 @@
+# Tested on macOS (Apple Silicon) with Python 3.12
+kokoro==0.9.4
+misaki[en]==0.9.4
+torch==2.14.1
+fastapi==0.160.0
+uvicorn==0.54.0
+pydantic==2.14.1
+soundfile==0.14.0
+numpy==2.5.4
+huggingface_hub
+# spaCy English model used by misaki's English G2P (installed here so nothing is fetched at runtime)
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
