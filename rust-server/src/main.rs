@@ -266,7 +266,7 @@ async fn method_not_allowed() -> Response {
 // ------------------------------------------------------------------ main
 fn usage() -> ! {
     eprintln!(
-        "usage:\n  kokoro-reader-server                     run the HTTP server (127.0.0.1:$KOKORO_PORT, default 8880)\n  kokoro-reader-server phonemize [--g2p NAME] [--lang a|b] TEXT\n  kokoro-reader-server synth [--voice V] [--speed S] [--out FILE] TEXT\n\nenv: KOKORO_PORT KOKORO_DEVICE=cpu|coreml KOKORO_THREADS KOKORO_MODEL_DIR KOKORO_MODEL_VARIANT=fp32|fp16|int8\n     KOKORO_MODEL KOKORO_VOICES_FILE KOKORO_G2P={:?} KOKORO_DEFAULT_VOICE KOKORO_VOICES=all KOKORO_CHUNK_PHONEMES",
+        "usage:\n  kokoro-reader-server                     run the HTTP server (127.0.0.1:$KOKORO_PORT, default 8880)\n  kokoro-reader-server phonemize [--g2p NAME] [--lang a|b] TEXT\n  kokoro-reader-server synth [--voice V] [--speed S] [--out FILE] TEXT\n  kokoro-reader-server profile [--runs N] [--voice V] [--out FILE] TEXT   (KOKORO_PROFILE=1: per-stage)\n\nenv: KOKORO_PORT KOKORO_DEVICE=cpu|coreml KOKORO_THREADS KOKORO_MODEL_DIR KOKORO_MODEL_VARIANT=fp32|fp16|int8\n     KOKORO_MODEL KOKORO_VOICES_FILE KOKORO_G2P={:?} KOKORO_DEFAULT_VOICE KOKORO_VOICES=all KOKORO_CHUNK_PHONEMES",
         g2p::available()
     );
     std::process::exit(2)
@@ -301,6 +301,53 @@ fn main() {
                     Err(e) => println!("ERROR: {e}"),
                 }
             }
+            return;
+        }
+        Some("profile") => {
+            // profile [--runs N] [--voice V] [--out FILE] TEXT: 1 warm-up + N runs; with
+            // KOKORO_PROFILE=1 on a candle device, also per-stage medians (device-synced).
+            args.remove(0);
+            let voice = flag(&mut args, "--voice").unwrap_or_else(|| "af_heart".into());
+            let runs: usize = flag(&mut args, "--runs").map(|s| s.parse().unwrap()).unwrap_or(3);
+            let out = flag(&mut args, "--out");
+            let t0 = Instant::now();
+            let eng = Engine::load(&options()).unwrap_or_else(|e| { eprintln!("{e}"); std::process::exit(1) });
+            let load_s = t0.elapsed().as_secs_f64();
+            let txt = text::clean(&args.join(" "));
+            let mut totals = Vec::new();
+            let mut stages: Vec<(String, Vec<f64>)> = Vec::new();
+            let mut first_s = 0.0;
+            let mut audio_s = 0.0;
+            for i in 0..=runs {
+                let t = Instant::now();
+                let s = eng.synthesize(&txt, &voice, 1.0).unwrap_or_else(|e| { eprintln!("{e}"); std::process::exit(1) });
+                let el = t.elapsed().as_secs_f64();
+                audio_s = s.audio.len() as f64 / SAMPLE_RATE as f64;
+                let laps = engine::take_profile();
+                if i == 0 {
+                    first_s = el;
+                    if let Some(o) = &out { std::fs::write(o, engine::wav_pcm16(&s.audio, SAMPLE_RATE)).unwrap(); }
+                    continue;
+                }
+                totals.push(el);
+                for (l, v) in laps {
+                    match stages.iter_mut().find(|e| e.0 == l) {
+                        Some(e) => e.1.push(v),
+                        None => stages.push((l.to_string(), vec![v])),
+                    }
+                }
+            }
+            let med = |v: &mut Vec<f64>| { v.sort_by(|a, b| a.partial_cmp(b).unwrap()); v[v.len() / 2] };
+            let total = med(&mut totals);
+            let mut st = serde_json::Map::new();
+            let mut ordered = stages;
+            ordered.sort_by(|a, b| a.0.cmp(&b.0));
+            for (l, mut v) in ordered {
+                st.insert(l, serde_json::json!((med(&mut v) * 1000.0).round() / 1000.0));
+            }
+            println!("{}", serde_json::json!({"device": eng.device, "load_s": (load_s*100.0).round()/100.0,
+                "first_s": (first_s*100.0).round()/100.0, "median_s": (total*1000.0).round()/1000.0,
+                "audio_s": (audio_s*100.0).round()/100.0, "stages_s": st}));
             return;
         }
         Some("synth") => {

@@ -143,13 +143,22 @@ impl AdaINResBlock1 {
     /// x: [B, C, T], s: [B, style_dim]
     pub fn forward(&self, x: &Tensor, s: &Tensor) -> Result<Tensor> {
         let mut x = x.clone();
+        let dev = x.device().clone();
+        let p = |l| crate::prof::lap(&dev, l);
         for i in 0..self.convs1.len() {
+            p("R0 (before resblock1 op)");
             let mut xt = self.adain1[i].forward(&x, s)?;
+            p("R1 resblock1: adain (instance norm)");
             xt = snake_activation(&xt, &self.alpha1[i])?;
+            p("R2 resblock1: snake");
             xt = self.convs1[i].forward(&xt)?;
+            p("R3 resblock1: conv1d (dilated)");
             xt = self.adain2[i].forward(&xt, s)?;
+            p("R1 resblock1: adain (instance norm)");
             xt = snake_activation(&xt, &self.alpha2[i])?;
+            p("R2 resblock1: snake");
             xt = self.convs2[i].forward(&xt)?;
+            p("R4 resblock1: conv1d (dilation 1)");
             x = (&xt + &x)?;
         }
         Ok(x)
@@ -719,6 +728,7 @@ impl Generator {
         let (har_spec, har_phase) = self.stft.transform(&har_source)?;
         // har: [B, n_fft/2+1 + n_fft/2+1, T_stft] = [B, n_fft+2, T_stft]
         let har = Tensor::cat(&[&har_spec, &har_phase], 1)?;
+        crate::prof::lap(x.device(), "8a gen source: f0 upsample + sinegen + stft (atan2 on cpu)");
 
         let mut x = x.clone();
         for i in 0..self.num_upsamples {
@@ -727,8 +737,10 @@ impl Generator {
             // Noise conditioning
             let mut x_source = self.noise_convs[i].forward(&har)?;
             x_source = self.noise_res[i].forward(&x_source, s)?;
+            crate::prof::lap(x.device(), "8b gen noise convs + noise resblocks");
 
             x = self.ups[i].forward(&x)?;
+            crate::prof::lap(x.device(), "8c gen upsample convT (ups)");
 
             // Reflection pad on last upsample
             if i == self.num_upsamples - 1 {
@@ -769,6 +781,7 @@ impl Generator {
             }
             let nk = Tensor::new(self.num_kernels as f32, x.device())?.to_dtype(x.dtype())?;
             x = xs.unwrap().broadcast_div(&nk)?;
+            crate::prof::lap(x.device(), "8d gen adain resblocks (snake)");
         }
 
         x = nn::Activation::LeakyRelu(0.01).forward(&x)?;
@@ -780,6 +793,7 @@ impl Generator {
             .narrow(1, self.post_n_fft / 2 + 1, self.post_n_fft / 2 + 1)?
             .sin()?;
 
+        crate::prof::lap(x.device(), "8e gen conv_post + exp/sin");
         self.stft.inverse(&spec, &phase)
     }
 }
@@ -906,6 +920,7 @@ impl Decoder {
         // Concatenate [asr, F0, N] along channel dim
         let x = Tensor::cat(&[asr, &f0, &n_out], 1)?;
 
+        crate::prof::lap(x.device(), "7a decoder F0/N conv + cat");
         let mut x = self.encode.forward(&x, s)?;
 
         let asr_res = self.asr_res.forward(asr)?;
@@ -921,6 +936,7 @@ impl Decoder {
             }
         }
 
+        crate::prof::lap(x.device(), "7b decoder encode+decode adain resblks");
         self.generator.forward_with_mode(&x, s, f0_curve, mode)
     }
 }

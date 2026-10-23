@@ -101,6 +101,7 @@ impl KModel {
         device: &Device,
         mode: SynthesisMode,
     ) -> Result<Tensor> {
+        crate::prof::begin(device);
         // Pad with BOS=0 and EOS=0
         let mut padded = Vec::with_capacity(input_ids.len() + 2);
         padded.push(0i64);
@@ -133,6 +134,7 @@ impl KModel {
             &attention_mask.to_dtype(DType::F32)?,
         )?; // [1, T, hidden_size]
 
+        crate::prof::lap(device, "1 bert (albert)");
         // bert_encoder: project hidden_size -> hidden_dim
         let d_en = self.bert_encoder.forward(&bert_dur)?; // [1, T, hidden_dim]
         let d_en = d_en.transpose(1, 2)?; // [1, hidden_dim, T]
@@ -146,6 +148,7 @@ impl KModel {
             .text_encoder
             .forward(&d_en, &s, &input_lengths, &text_mask)?; // [1, T, hidden_dim]
 
+        crate::prof::lap(device, "2 duration encoder (3 bilstm + adaln)");
         // Duration LSTM: needs [1, T, hidden_dim + style_dim]
         let (b, t_dur, _) = d.dims3()?;
         let s_exp = s.unsqueeze(1)?.expand(&[b, t_dur, 128])?;
@@ -160,6 +163,7 @@ impl KModel {
         let duration = duration.broadcast_div(&speed_t)?;
         let pred_dur = duration.round()?.clamp(1.0f32, f32::MAX)?;
 
+        crate::prof::lap(device, "3 duration lstm + proj");
         // Build alignment matrix on GPU via repeat_interleave-style expansion.
         //
         // The alignment matrix is a [T, total_frames] binary matrix where each
@@ -196,9 +200,11 @@ impl KModel {
         let d_t = d.transpose(1, 2)?.contiguous()?;
         let en = d_t.index_select(&frame_idx, 2)?; // [1, hidden_dim, total_frames]
 
+        crate::prof::lap(device, "4 alignment (dur d2h + gather)");
         // F0 and N prediction
         let (f0_pred, n_pred) = self.predictor.f0_n_train(&en, &s)?;
 
+        crate::prof::lap(device, "5c F0/N blocks");
         // Text encoder
         let t_en = self.text_encoder.forward(
             &input_ids_t.to_dtype(DType::U32)?,
@@ -209,14 +215,16 @@ impl KModel {
         // asr = t_en @ pred_aln_trg
         let asr = t_en.contiguous()?.index_select(&frame_idx, 2)?; // [1, hidden_dim, total_frames]
 
+        crate::prof::lap(device, "6 text encoder (cnn + bilstm) + gather");
         // Decoder
         let s_acoustic = ref_s.narrow(1, 0, 128)?; // [1, 128]
         let audio = self
             .decoder
             .forward_with_mode(&asr, &f0_pred, &n_pred, &s_acoustic, mode)?;
 
-        // audio: [1, 1, samples] -> [samples]
-        audio.squeeze(0)?.squeeze(0)
+        let audio = audio.squeeze(0)?.squeeze(0)?;
+        crate::prof::lap(device, "8f istft (convT) + trim");
+        Ok(audio)
     }
 }
 

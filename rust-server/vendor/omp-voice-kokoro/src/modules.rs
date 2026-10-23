@@ -303,7 +303,9 @@ impl AdainResBlk1d {
         let mut h = self.norm1.forward(x, s)?;
         h = nn::Activation::LeakyRelu(0.2).forward(&h)?;
         if let Some(ref pool) = self.pool {
-            h = pool.forward(&h)?;
+            crate::prof::lap(x.device(), "(adain resblk)");
+            h = if depthwise_fast() { depthwise_convt_s2(&h, pool)? } else { pool.forward(&h)? };
+            crate::prof::lap(x.device(), "X depthwise convT pool (all blocks)");
         }
         h = self.conv1.forward(&h)?;
 
@@ -315,6 +317,35 @@ impl AdainResBlk1d {
         let out = (h + shortcut)?;
         out * (1.0 / 2.0_f64.sqrt())
     }
+}
+
+/// kokoro-reader change: KOKORO_DEPTHWISE=0 restores candle's grouped conv_transpose1d.
+fn depthwise_fast() -> bool {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ON.get_or_init(|| std::env::var("KOKORO_DEPTHWISE").map(|v| v != "0").unwrap_or(true))
+}
+
+/// kokoro-reader change: depthwise ConvTranspose1d(C, C, k=3, stride=2, padding=1,
+/// output_padding=1, groups=C) as a handful of elementwise ops. candle implements grouped
+/// conv_transpose1d by chunking into `groups` separate convolutions plus a cat, i.e. ~1000
+/// tiny kernels per call here (the decoder's upsampling block has C=1090, the F0/N blocks 512).
+///
+/// y[t] = sum_k w[k] * d[t + 1 - k], where d is x zero-stuffed by 2 (d[2i] = x[i]), t in 0..2T.
+pub fn depthwise_convt_s2(x: &Tensor, conv: &nn::ConvTranspose1d) -> Result<Tensor> {
+    let (b, c, t) = x.dims3()?;
+    let w = conv.weight(); // [C, 1, 3]
+    // zero-stuff: [B, C, T, 2] -> [B, C, 2T] = x0, 0, x1, 0, ...
+    let d = Tensor::stack(&[x, &x.zeros_like()?], 3)?.reshape((b, c, 2 * t))?;
+    // y[t] = w0*d[t+1] + w1*d[t] + w2*d[t-1]; d[2T] and d[-1] are zero.
+    let d = d.pad_with_zeros(2, 1, 1)?; // dp[j] = d[j-1], length 2T+2
+    let wk = |k: usize| w.narrow(2, k, 1)?.reshape((1, c, 1));
+    let mut y = d.narrow(2, 2, 2 * t)?.broadcast_mul(&wk(0)?)?;
+    y = (y + d.narrow(2, 1, 2 * t)?.broadcast_mul(&wk(1)?)?)?;
+    y = (y + d.narrow(2, 0, 2 * t)?.broadcast_mul(&wk(2)?)?)?;
+    if let Some(bias) = conv.bias() {
+        y = y.broadcast_add(&bias.reshape((1, c, 1))?)?;
+    }
+    Ok(y)
 }
 
 // ---------------------------------------------------------------------------
@@ -624,7 +655,9 @@ impl ProsodyPredictor {
         let s_exp = s.unsqueeze(1)?.expand(&[b, t, self.style_dim])?;
         let xt_s = Tensor::cat(&[&xt, &s_exp], 2)?;
 
+        crate::prof::lap(x.device(), "5a (pre F0/N)");
         let h = self.shared.forward(&xt_s)?; // [B, T, d_hid]
+        crate::prof::lap(x.device(), "5b F0/N shared bilstm (frames)");
 
         // F0 path
         let mut f0 = h.transpose(1, 2)?; // [B, d_hid, T]
@@ -666,4 +699,27 @@ pub fn layer_norm_no_affine(x: &Tensor, channels: usize, eps: f32) -> Result<Ten
     let ones = Tensor::ones(channels, dtype, device)?;
     let zeros = Tensor::zeros(channels, dtype, device)?;
     nn::ops::layer_norm(x, &ones, &zeros, eps)
+}
+
+#[cfg(test)]
+mod depthwise_tests {
+    use super::*;
+    use candle_core::{Device, Tensor};
+
+    #[test]
+    fn depthwise_convt_matches_candle() -> Result<()> {
+        let dev = Device::Cpu;
+        let (c, t) = (5usize, 7usize);
+        let x = Tensor::randn(0f32, 1f32, (1, c, t), &dev)?;
+        let w = Tensor::randn(0f32, 1f32, (c, 1, 3), &dev)?;
+        let bias = Tensor::randn(0f32, 1f32, c, &dev)?;
+        let cfg = nn::ConvTranspose1dConfig { stride: 2, padding: 1, output_padding: 1, groups: c, ..Default::default() };
+        let conv = nn::ConvTranspose1d::new(w, Some(bias), cfg);
+        let a = conv.forward(&x)?;
+        let b = depthwise_convt_s2(&x, &conv)?;
+        assert_eq!(a.dims(), b.dims());
+        let diff = (a - b)?.abs()?.max_all()?.to_scalar::<f32>()?;
+        assert!(diff < 1e-5, "max diff {diff}");
+        Ok(())
+    }
 }

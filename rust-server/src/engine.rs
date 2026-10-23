@@ -340,6 +340,14 @@ impl Engine {
     }
 }
 
+/// Per-stage timings recorded since the last call (candle backend with KOKORO_PROFILE=1).
+pub fn take_profile() -> Vec<(&'static str, f64)> {
+    #[cfg(feature = "candle")]
+    return omp_voice_kokoro::prof::take();
+    #[cfg(not(feature = "candle"))]
+    Vec::new()
+}
+
 /// 16-bit PCM mono WAV (what soundfile writes for subtype="PCM_16").
 pub fn wav_pcm16(audio: &[f32], sample_rate: u32) -> Vec<u8> {
     let data_len = (audio.len() * 2) as u32;

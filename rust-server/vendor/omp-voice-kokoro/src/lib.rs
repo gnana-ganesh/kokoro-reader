@@ -6,6 +6,7 @@ pub mod config;
 pub mod istftnet;
 pub mod model;
 pub mod modules;
+pub mod prof;
 
 pub use config::ModelConfig;
 pub use istftnet::SynthesisMode;
