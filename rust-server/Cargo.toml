@@ -1,0 +1,40 @@
+[package]
+name = "kokoro-reader-server"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Drop-in Rust (ONNX Runtime) replacement for the Kokoro Reader Python TTS server"
+repository = "https://github.com/gnana-ganesh/kokoro-reader"
+publish = false
+
+[[bin]]
+name = "kokoro-reader-server"
+path = "src/main.rs"
+
+[features]
+# Default G2P: loqui-g2p (pure-Rust port of misaki 0.9.4, MIT, no GPL espeak-ng).
+default = ["g2p-loqui"]
+g2p-loqui = ["dep:loqui-g2p"]
+# misaki-rs (MIT) with espeak-ng fallback (links GPL-3.0 espeak-ng; needs cmake + libclang to build).
+g2p-misaki-rs = ["dep:misaki-rs"]
+# Plain espeak-ng, exactly what Kokoros does today (GPL-3.0 espeak-ng; needs cmake + libclang).
+g2p-espeak = ["dep:espeak-rs"]
+# Apple CoreML execution provider (macOS only). Select at runtime with KOKORO_DEVICE=coreml.
+coreml = ["ort/coreml"]
+
+[dependencies]
+ort = { version = "=2.0.0-rc.15" }
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio", "query"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+regex = "1"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+loqui-g2p = { version = "0.4", optional = true }
+misaki-rs = { version = "0.6", optional = true }
+espeak-rs = { version = "0.1.9", optional = true }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

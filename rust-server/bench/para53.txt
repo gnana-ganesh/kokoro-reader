@@ -1,0 +1,1 @@
+Rust is a systems programming language that focuses on safety, speed, and concurrency. It achieves memory safety without a garbage collector by using a borrow checker that validates references at compile time. This lets developers write low-level code with confidence, avoiding entire classes of bugs that commonly plague C and C++ programs today.
