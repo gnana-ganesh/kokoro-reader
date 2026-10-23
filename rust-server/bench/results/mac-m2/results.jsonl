@@ -1,0 +1,14 @@
+{"label": "python-8880", "words": 53, "audio_s": 23.73, "median_s": 2.35, "min_s": 2.33, "max_s": 2.39, "rtf_x": 10.1, "rss_mb": 200, "peak_rss_mb": null}
+{"label": "rs-cpu-fp32", "words": 53, "audio_s": 23.73, "median_s": 5.92, "min_s": 5.84, "max_s": 6.01, "rtf_x": 4.0, "rss_mb": 1061, "peak_rss_mb": null, "startup_s": 5.3}
+{"label": "rs-cpu-fp16", "words": 53, "audio_s": 23.95, "median_s": 4.97, "min_s": 4.82, "max_s": 4.98, "rtf_x": 4.8, "rss_mb": 1242, "peak_rss_mb": null, "startup_s": 3.2}
+{"label": "rs-cpu-int8", "words": 53, "audio_s": 23.55, "median_s": 3.69, "min_s": 3.53, "max_s": 3.88, "rtf_x": 6.4, "rss_mb": 1902, "peak_rss_mb": null, "startup_s": 3.6}
+AssertionError: (500, b'{"detail":"synthesis failed: Non-zero status code returned while running 10454111911167330790_CoreML_10454111911167330790_41 node. Name:\'CoreMLExecutionProvider_10454111911167330790_CoreML_10454111911')
+AssertionError: (500, b'{"detail":"synthesis failed: Non-zero status code returned while running 10454111911167330790_CoreML_10454111911167330790_41 node. Name:\'CoreMLExecutionProvider_10454111911167330790_CoreML_10454111911')
+AssertionError: (500, b'{"detail":"synthesis failed: Non-zero status code returned while running 10454111911167330790_CoreML_10454111911167330790_41 node. Name:\'CoreMLExecutionProvider_10454111911167330790_CoreML_10454111911')
+AssertionError: (500, b'{"detail":"synthesis failed: Non-zero status code returned while running 10454111911167330790_CoreML_10454111911167330790_41 node. Name:\'CoreMLExecutionProvider_10454111911167330790_CoreML_10454111911')
+{"label": "rs-coreml-nn-fp32", "words": 53, "audio_s": 23.73, "median_s": 6.76, "min_s": 6.56, "max_s": 7.45, "rtf_x": 3.5, "rss_mb": 776, "peak_rss_mb": null, "startup_s": 5.2}
+{"label": "rs-t4-fp32 KOKORO_THREADS=4 KOKORO_MODEL_VARIANT=fp32", "words": 53, "audio_s": 23.73, "median_s": 5.58, "min_s": 5.49, "max_s": 5.63, "rtf_x": 4.3, "rss_mb": 2244, "peak_rss_mb": null}
+{"label": "rs-t4-fp16 KOKORO_THREADS=4 KOKORO_MODEL_VARIANT=fp16", "words": 53, "audio_s": 23.73, "median_s": 7.17, "min_s": 6.06, "max_s": 9.29, "rtf_x": 3.3, "rss_mb": 2146, "peak_rss_mb": null}
+{"label": "rs-t4-int8 KOKORO_THREADS=4 KOKORO_MODEL_VARIANT=int8", "words": 53, "audio_s": 23.73, "median_s": 9.81, "min_s": 9.02, "max_s": 11.43, "rtf_x": 2.4, "rss_mb": 2180, "peak_rss_mb": null}
+{"label": "rs-t4-int8-noarena KOKORO_THREADS=4 KOKORO_MODEL_VARIANT=int8 KOKORO_CPU_ARENA=0", "words": 53, "audio_s": 23.73, "median_s": 9.24, "min_s": 7.87, "max_s": 9.54, "rtf_x": 2.6, "rss_mb": 2147, "peak_rss_mb": null}
+{"label": "rs-t2-int8 KOKORO_THREADS=2 KOKORO_MODEL_VARIANT=int8", "words": 53, "audio_s": 23.73, "median_s": 9.2, "min_s": 9.09, "max_s": 9.2, "rtf_x": 2.6, "rss_mb": 2144, "peak_rss_mb": null}

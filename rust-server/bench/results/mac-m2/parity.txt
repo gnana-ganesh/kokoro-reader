@@ -1,0 +1,30 @@
+DIFF health -> 200
+   py: {'status': 200, 'content-type': 'application/json', 'vary': 'Origin', 'body': {'status': 'ok', 'device': 'mps', 'voices': 10, 'sample_rate': 24000}}
+   rs: {'status': 200, 'content-type': 'application/json', 'vary': 'Origin', 'body': {'status': 'ok', 'device': 'cpu', 'voices': 10, 'sample_rate': 24000}}
+PASS voices -> 200
+DIFF health ext origin -> 200
+   py: {'status': 200, 'content-type': 'application/json', 'access-control-allow-origin': 'chrome-extension://abcdefghijklmnopabcdefghijklmnop', 'access-control-expose-headers': 'X-Audio-Duration, X-Synth-Seconds', 'vary': 'Origin', 'body': {'status': 'ok', 'device': 'mps', 'voices': 10, 'sample_rate': 24000}}
+   rs: {'status': 200, 'content-type': 'application/json', 'access-control-allow-origin': 'chrome-extension://abcdefghijklmnopabcdefghijklmnop', 'access-control-expose-headers': 'X-Audio-Duration, X-Synth-Seconds', 'vary': 'Origin', 'body': {'status': 'ok', 'device': 'cpu', 'voices': 10, 'sample_rate': 24000}}
+PASS health evil origin -> 403
+PASS tts evil origin -> 403
+PASS bad ext id (uppercase) -> 403
+PASS bad ext id (31 chars) -> 403
+PASS null origin -> 403
+PASS preflight ok -> 200
+PASS preflight evil -> 403
+PASS preflight bad method -> 400
+PASS options no origin -> 405
+PASS tts ok -> 200
+PASS tts ok ext origin -> 200
+PASS tts british -> 200
+PASS tts empty -> 400
+PASS tts unknown voice -> 400
+PASS tts speed too high -> 422
+PASS tts speed too low -> 422
+PASS tts missing text -> 422
+PASS tts text not string -> 422
+PASS tts invalid json -> 422
+PASS GET /tts -> 405
+PASS 404 -> 404
+
+22/24 identical

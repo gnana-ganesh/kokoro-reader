@@ -1,0 +1,18 @@
+  python Python [66978]: 64-bit    Footprint: 1870 MB (16384 bytes per page)
+  python     phys_footprint: 1870 MB
+  rs-cpu-fp32 kokoro-reader-server [74438]: 64-bit    Footprint: 2231 MB (16384 bytes per page)
+  rs-cpu-fp32     phys_footprint: 2231 MB
+  rs-cpu-fp16 kokoro-reader-server [74562]: 64-bit    Footprint: 2142 MB (16384 bytes per page)
+  rs-cpu-fp16     phys_footprint: 2142 MB
+  rs-cpu-int8 kokoro-reader-server [74678]: 64-bit    Footprint: 2440 MB (16384 bytes per page)
+  rs-cpu-int8     phys_footprint: 2440 MB
+  rs-coreml-all-fp32 kokoro-reader-server [74715]: 64-bit    Footprint: 2622 MB (16384 bytes per page)
+  rs-coreml-all-fp32     phys_footprint: 2622 MB
+  rs-coreml-all-fp32-cached kokoro-reader-server [74856]: 64-bit    Footprint: 2639 MB (16384 bytes per page)
+  rs-coreml-all-fp32-cached     phys_footprint: 2639 MB
+  rs-coreml-gpu-fp32 kokoro-reader-server [74904]: 64-bit    Footprint: 2620 MB (16384 bytes per page)
+  rs-coreml-gpu-fp32     phys_footprint: 2620 MB
+  rs-coreml-ane-fp32 kokoro-reader-server [75031]: 64-bit    Footprint: 1843 MB (16384 bytes per page)
+  rs-coreml-ane-fp32     phys_footprint: 1843 MB
+  rs-coreml-nn-fp32 kokoro-reader-server [75092]: 64-bit    Footprint: 3377 MB (16384 bytes per page)
+  rs-coreml-nn-fp32     phys_footprint: 3377 MB
