@@ -30,6 +30,7 @@ run_cfg() {  # label env...
     r=$(python3 bench.py http://127.0.0.1:$PORT $RS_PID $label $RUNS para53.txt 2>&1 | tail -1)
     echo "$r" | python3 -c "import sys,json;d=json.loads(sys.stdin.read());d['startup_s']=$STARTUP;print(json.dumps(d))" >> "$OUT/results.jsonl" || echo "$r" >> "$OUT/results.jsonl"
     tail -1 "$OUT/results.jsonl"
+    command -v footprint >/dev/null && footprint -p $RS_PID 2>/dev/null | grep -iE "footprint:|phys_footprint" | head -2 | sed "s/^/  $label /" | tee -a "$OUT/footprint.txt"
     grep -iE "warn|error|fallback|partition|nodes" "$OUT/$label.log" | head -5
     stop_rs
   fi
@@ -41,6 +42,7 @@ if start_rs parity; then python3 parity.py http://127.0.0.1:$PY_PORT http://127.
 echo "== Python server on $PY_PORT"
 PY_PID=$(lsof -ti tcp:$PY_PORT -sTCP:LISTEN | head -1)
 python3 bench.py http://127.0.0.1:$PY_PORT "${PY_PID:-0}" python-$PY_PORT $RUNS para53.txt | tee -a "$OUT/results.jsonl"
+command -v footprint >/dev/null && footprint -p ${PY_PID:-0} 2>/dev/null | grep -iE "footprint:|phys_footprint" | head -2 | sed "s/^/  python /" | tee -a "$OUT/footprint.txt"
 
 echo "== Rust configs"
 run_cfg rs-cpu-fp32 KOKORO_DEVICE=cpu KOKORO_MODEL_VARIANT=fp32
