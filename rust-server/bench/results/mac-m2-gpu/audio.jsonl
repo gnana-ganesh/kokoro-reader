@@ -1,0 +1,8 @@
+{"file": "out_rs-cpu-int8-t4.wav", "secs": 23.55, "len_vs_ref": 1.0, "rms": 0.0729, "silent_frac": 0.212, "env_corr_vs_ref": 1.0}
+{"file": "out_python-8880.wav", "secs": 23.73, "len_vs_ref": 1.007, "rms": 0.052, "silent_frac": 0.219, "env_corr_vs_ref": 0.471}
+{"file": "out_rs-metal-2.wav", "secs": 23.68, "len_vs_ref": 1.005, "rms": 0.0511, "silent_frac": 0.216, "env_corr_vs_ref": 0.542}
+{"file": "out_rs-metal-candle-lstm.wav", "secs": 23.68, "len_vs_ref": 1.005, "rms": 0.0511, "silent_frac": 0.216, "env_corr_vs_ref": 0.542}
+{"file": "out_rs-metal.wav", "secs": 23.68, "len_vs_ref": 1.005, "rms": 0.0511, "silent_frac": 0.216, "env_corr_vs_ref": 0.542}
+{"file": "out_rs-webgpu-fp16.wav", "secs": 23.95, "len_vs_ref": 1.017, "rms": 0.074, "silent_frac": 0.201, "env_corr_vs_ref": 0.442}
+{"file": "out_rs-webgpu-fp32.wav", "secs": 23.73, "len_vs_ref": 1.007, "rms": 0.0746, "silent_frac": 0.206, "env_corr_vs_ref": 0.477}
+{'det_cpu_vs_metal_sample_corr': 0.9918, 'len_cpu': 95400, 'len_metal': 95400, 'max_abs_diff': 0.275970458984375}

@@ -1,0 +1,9 @@
+{"label": "python-8880", "words": 53, "audio_s": 23.73, "median_s": 2.28, "min_s": 2.27, "max_s": 2.28, "rtf_x": 10.4, "first_s": 3.01, "rss_mb": 200, "peak_rss_mb": null}
+{"label": "rs-cpu-int8-t4", "words": 53, "audio_s": 23.55, "median_s": 3.37, "min_s": 3.32, "max_s": 3.61, "rtf_x": 7.0, "first_s": 3.58, "rss_mb": 1129, "peak_rss_mb": null, "startup_s": 6.3}
+{"label": "rs-metal", "words": 53, "audio_s": 23.68, "median_s": 12.21, "min_s": 12.19, "max_s": 12.33, "rtf_x": 1.9, "first_s": 14.34, "rss_mb": 104, "peak_rss_mb": null, "startup_s": 12.4}
+{"label": "rs-metal-2", "words": 53, "audio_s": 23.68, "median_s": 12.2, "min_s": 12.19, "max_s": 12.21, "rtf_x": 1.9, "first_s": 12.18, "rss_mb": 108, "peak_rss_mb": null, "startup_s": 2.1}
+{"label": "rs-webgpu-fp32", "words": 53, "audio_s": 23.73, "median_s": 9.11, "min_s": 9.07, "max_s": 9.14, "rtf_x": 2.6, "first_s": 9.15, "rss_mb": 143, "peak_rss_mb": null, "startup_s": 3.2}
+{"label": "rs-webgpu-fp16", "words": 53, "audio_s": 23.95, "median_s": 8.83, "min_s": 8.83, "max_s": 8.88, "rtf_x": 2.7, "first_s": 8.91, "rss_mb": 296, "peak_rss_mb": null, "startup_s": 2.1}
+{"label":"rs-coreml-static","error":"AssertionError: (500, b'{\"detail\":\"synthesis failed: Non-zero status code returned while running 10454111911167330790_CoreML_10454111911167330790_41 node. Name:\\'CoreMLExecutionProvider_10454111911167330790_CoreML_10454111911')"}
+{"label":"rs-coreml-static-gpu","error":"AssertionError: (500, b'{\"detail\":\"synthesis failed: Non-zero status code returned while running 10454111911167330790_CoreML_10454111911167330790_41 node. Name:\\'CoreMLExecutionProvider_10454111911167330790_CoreML_10454111911')"}
+{"label": "rs-metal-candle-lstm", "words": 53, "audio_s": 23.68, "median_s": 12.37, "min_s": 12.37, "max_s": 12.37, "rtf_x": 1.9, "first_s": 12.4, "rss_mb": 111, "peak_rss_mb": null, "startup_s": 2.1}
