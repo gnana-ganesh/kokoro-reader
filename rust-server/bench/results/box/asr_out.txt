@@ -1,0 +1,65 @@
+
+TXT The HTTP API returns JSON, and OAuth 2.0 handles login.
+  py           The HTTP API returns JSON, and OAuth 2 handles login.
+  rs-loqui     The HTTP API returns JSON, and OAuth 2 handles login.
+  rs-espeak    The HTTP API returns JSON, and OAuth 2.0 handles login.
+  rs-misaki-rs The HTTP API returns JSON and OAuth 2.0, handles login.
+
+TXT Use std::vector<int> and call foo.bar() in C++.
+  py           Use STD, vector int and call foo bar, in C++.
+  rs-loqui     Use STD, vector in and call FUBAR, in C++.
+  rs-espeak    Use std colon vector int and call foo.bar in C++.
+  rs-misaki-rs Use std, vector int, and call foo, bar in C++.
+
+TXT On 2024-03-15, Dr. Smith paid $1,234.56 for 3.5 GB of RAM.
+  py           On 2020-40-315, Dr. Smith paid $1,234.56 for 3.5 GB of RAM.
+  rs-loqui     On 2020-40-315, Dr. Smith paid $1,234.56 for 3.5 GB of RAM.
+  rs-espeak    On 2024-03-15, Dr. Smith paid $1,234.56 for 3.5 GB of RAM.
+  rs-misaki-rs On 2024-3-15, Dr. Smith paid $1,234.56 for 3.5 GB of RAM.
+
+TXT The meeting is at 10:30 a.m. on Jan. 5th, e.g. next Tuesday.
+  py           The meeting is at 10.30 a.m. on Jan. Fifth, E.G. next Tuesday.
+  rs-loqui     The meeting is at 10.30 a.m. on Jan. Fifth, EG next Tuesday.
+  rs-espeak    The meeting is at 10.30 a.m. on Jan. Fifth, for example, next Tuesday.
+  rs-misaki-rs The meeting is at 10, 30 a.m. on Jan, 5th e.g. next Tuesday.
+
+TXT I read 1984 in the 1990s; it cost £12 and 50% off.
+  py           I read 1984 in the 1990s. It cost 12 pounds and 50% off.
+  rs-loqui     I read 1984 in the 1990s. It cost 12 pounds and 50% off.
+  rs-espeak    I read 1984 in the 1990. It cost £12 and 50% off.
+  rs-misaki-rs I read 1,984 in the 1,990s. It cost 12 and 50% off.
+
+TXT Mr. O'Neil lives at 221B Baker St., i.e. in London.
+  py           Mr. O'Neill lives at 221 B Baker Scent, i.e. in London.
+  rs-loqui     Mr. O'Neill lives at 221 B Baker S.D., i.e. in London.
+  rs-espeak    Mr. O'Neill lives at 221B Baker, sent i.e. in London.
+  rs-misaki-rs Mr. O'Neill, lives at 220, 1B Baker Cent, i.e. in London.
+
+TXT Run npm install, then git push origin main --force.
+  py           Run NPM install then get push origin main force
+  rs-loqui     Run NPM install then get push origin main force
+  rs-espeak    Run NPM install then get push origin main force
+  rs-misaki-rs Run NPM install then git push origin mainforce
+
+TXT Kubernetes, PostgreSQL, nginx and GitHub are popular.
+  py           Kubernetes, PostgreSQL, Nginx, and GitHub are popular.
+  rs-loqui     Kubernetes, Postgresk, Njinx, and GitHub are popular.
+  rs-espeak    Kubernetes, PostgreSQL, EngineX, and GitHub are popular.
+  rs-misaki-rs Kubernetes, PostgreSQL, EngineX, and GitHub are popular.
+
+TXT The ratio is 3:1, version v1.2.3, and pi is 3.14159.
+  py           The ratio is 3, 1, version V123, and pi is 3.14159.
+  rs-loqui     The ratio is 3, 1, version V123, and pi is 3.14159.
+  rs-espeak    The ratio is 3 colon 1, version v1.2.3, and pi is 3.14159.
+  rs-misaki-rs The ratio is 3, 1, version v1.2.3, and pi is 3.14159.
+
+TXT I'd've read the record, but I didn't record it.
+  py           I'd have read the record, but I didn't record it.
+  rs-loqui     I'd read the record, but I didn't record it.
+  rs-espeak    I'd have read the record, but I didn't record it.
+  rs-misaki-rs I'd have read the record, but I didn't record it.
+
+py           WER vs source text: 0.140   WER vs Python-server transcript: 0.000
+rs-loqui     WER vs source text: 0.202   WER vs Python-server transcript: 0.088
+rs-espeak    WER vs source text: 0.105   WER vs Python-server transcript: 0.149
+rs-misaki-rs WER vs source text: 0.123   WER vs Python-server transcript: 0.175
